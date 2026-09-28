@@ -1,0 +1,56 @@
+services:
+  campus360_postgis:
+    image: postgis/postgis:16-3.4
+    container_name: campus360_postgis
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: campus360
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - campus360-network
+    restart: always
+
+  ai_engine:
+    build:
+      context: ./ai_engine
+      dockerfile: Dockerfile
+    container_name: campus360_ai_engine
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@campus360_postgis:5432/campus360
+    depends_on:
+      - campus360_postgis
+    networks:
+      - campus360-network
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: campus360_backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://campus360_postgis:5432/campus360
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgrespassword
+      - AI_ENGINE_BASE_URL=http://campus360_ai_engine:8000
+    depends_on:
+      - campus360_postgis
+    networks:
+      - campus360-network
+    restart: always
+
+volumes:
+  postgres_data:
+
+networks:
+  campus360-network:
+    driver: bridge

@@ -1,0 +1,17 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0f172a;
+}
+
+/* Forces Leaflet Map component to fill its container tile grid */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 350px !important;
+  z-index: 1;
+}
